@@ -2,213 +2,341 @@
 husmum@gatech.edu
 */
 
+BLACK = "Black";
+BLUE = [.31, .45, .69];
+WHITE = "White";
+SKIN = [.90,.596,.41];
+LIME_GREEN = "LimeGreen";
 
-//Lets make Sonic's Head
+Y_90_DEGREES = [0,90,0];
+RIGHT_15_DEGREES = [15, 0, 0];
+LEFT_15_DEGREES = [-15, 0, 0];
 
-//F6 renders without color
+DIRECTIONS = [-1, 1];
 
-//Cylindrical Base
-color("Black")
-translate([-6,0,-20])
-	cylinder(h=2,r=32);
+ARRAY_BASE_CORRECTION = -1;
 
-//Face and space for eyes
-difference(){
-	color([.31, .45, .69])
-		sphere(r=20);
-	
-		sphere(r=18);
-	hull(){
-		translate([15,8,4])
-				sphere(r=5);
-		
-		translate([15,-8,4])
-				sphere(r=5);}}
+function array_range(array) = [0:len(array) + ARRAY_BASE_CORRECTION];
 
-//Eyes
+module pedestal() {
+    offset = [-6, 0, -20];
+    height = 2;
+    radius = 32;
 
-//Base
-color("White"){
-difference(){
-	hull(){
-		translate([14,8,4])
-			sphere(r=5);
-		translate([14,-8,4])
-			sphere(r=5);}}
-
-	hull(){
-		translate([14,8,4])
-			sphere(r=3);
-		translate([14,-8,4])
-			sphere(r=3);}}
-
-module eye(y)
-{
-	//Iris
-	color("LimeGreen"){
-		translate([18.3,y,4]) {
-			scale([2.0,2.0,3.0]) 
-				sphere(r=1.0); }}
-	
-	//Pupil
-	color("Black"){
-		translate([19.6,y,3]){
-			scale([1,1,2])
-				sphere(r=1);}}
-
-	//Light
-	color("White"){
-		translate([20.1,y-.2,2]){
-				sphere(r=.4);}}}
-
-eye(7);
-eye(-7);
-
-//Sonic's spiky hair
-module hair(d,x,y,z,r){ 
-	color([.31, .45, .69])
-		rotate([0,d,0])
-			translate([x,y,z])
-				cylinder(h=5,r=r);
+    color(BLACK)
+        translate(offset)
+            cylinder(h = height, r = radius);
 }
 
-//Unfortunately SCAD doesn't allow calling 
-//modules within modules, excuse how messy this 
-//looks
+module eye_orbits(offset_x) {
+    orbit_deviation = 8;
+    offset_z = 4;
+    radius = 5;
 
-for (i = [0:25]){
-	hair(90-i,-12-i/25,0,-8-i,8-i/3.125);
+    for (i = array_range(DIRECTIONS)) {
+        translate([offset_x, orbit_deviation * DIRECTIONS[i], offset_z])
+            sphere(r = radius);
+    }
 }
 
-for (i = [0:25]){
-	hair(90-i,-5-i/25,8,-8-i,8-i/3.125);
+module head() {
+    offset_x = 15;
+    radius = 20;
+    color(BLUE)
+        difference() {
+                sphere(r = radius);
+            hull()
+                eye_orbits(offset_x);
+        }
 }
 
-for (i = [0:25]){
-	hair(90-i,-5-i/25,-8,-8-i,8-i/3.125);
+module scleras() {
+    offset_x = 14;
+
+    color(WHITE)
+        difference()
+            hull()
+                eye_orbits(offset_x);
 }
 
-for (i = [0:25]){
-	hair(90-i,5-i/25,8,-8-i,8-i/3.125);
+module eye_detail(color, offset, scale, radius) {
+    color(color)
+        translate(offset)
+            scale(scale)
+                sphere(r = radius);
 }
 
-for (i = [0:25]){
-	hair(90-i,5-i/25,-8,-8-i,8-i/3.125);
+module iris(offset_y) {
+    offset = [18.3, offset_y, 4];
+    scale = [2, 2, 3];
+    radius = 1;
+
+    eye_detail(LIME_GREEN, offset, scale, radius);
 }
 
-for (i = [0:25]){
-	hair(90-i,0-i/25,0,-8-i,8-i/3.125);
+module pupil(offset_y) {
+    offset = [19.6, offset_y, 3];
+    scale = [1, 1, 2];
+    radius= 1;
+
+    eye_detail(BLACK, offset, scale, radius);
 }
 
-//Nose
+module brightness(offset_y) {
+    center_deviation = 0.2;
+    offset = [20.1, offset_y - center_deviation, 2];
+    scale = [1, 1, 1];
+    radius = 0.4;
 
-translate([20,0,0])
-difference(){
-	color("Black")
-	hull(){
-		sphere(r=2);
-
-	translate([2,0,0])
-		sphere(r=2.4);}
-
-	translate([1,0,3])
-		sphere(r=2);
-
-	translate([1,0,-3])
-		sphere(r=2);} 
-
-//Mouth Area
-
-color([.90,.596,.41])
-translate([7,0,0])
-	difference(){
-		sphere(r=15);
-
-		translate([-15,-15,-15])
-			cube([15,30,30]);
-
-		rotate([0,90,0])
-		translate([-15,-15,-15])
-			cube([15,30,30]);
-
-		sphere(r=13.5);
-
-		translate([8,-7.5,6])
-			sphere(r=9);
-
-		translate([8,7.5,6])
-			sphere(r=9);
-
-		translate([15,0,2])
-			sphere(r=4);}
-
-//Smirk
-
-color("Black")
-translate([-10,3,-7]){
-difference(){
-rotate([15,0,0])
-translate([30,0,0])
-scale([1,4,1])
-	sphere(r=1);
-
-rotate([15,0,0])
-translate([30,0,1])
-scale([1,4,1])
-	sphere(r=1);
+    eye_detail(WHITE, offset, radius);
 }
 
-difference(){
-rotate([-15,0,0])
-translate([30,3,2])
-scale([1,1,4])
-	sphere(r=1);
+module eyes() {
+    offset = 7;
 
-rotate([-15,0,0])
-translate([30,3,0])
-scale([1,1,4])
-	sphere(r=1);
+    scleras();
+
+    for (i = array_range(DIRECTIONS)) {
+        offset_y = DIRECTIONS[i] * offset;
+        iris(offset_y);
+        pupil(offset_y);
+        brightness(offset_y);
+    }
 }
 
-difference(){
-rotate([15,0,0])
-translate([30,3.5,0])
-scale([1,1,4])
-	sphere(r=1);
+module lock_of_hair(lock){
+    iterations = 25;
+    segment_height = 5;
 
-rotate([15,0,0])
-translate([30,3.5,2])
-scale([1,1,4])
-	sphere(r=1);
-}}
+    for (i = [0:iterations]) {
+        rotation = [0, 90 - i, 0];
+        offset_x = lock[0] - i / iterations;
+        offset_y = lock[1];
+        offset_z = lock[2] - i;
+        radius = 8 - i/3.125;
 
-//Ears
-
-module ear() {
-color([.31, .45, .69])
-difference(){
-cylinder(h=10, r1=5, r2=0);
-
-cylinder(h=6, r1=4, r2=0);
-
-translate([0,-5,0])
-cube([10,10,10]);
+        color(BLUE)
+            rotate(rotation)
+                translate([offset_x, offset_y, offset_z])
+                    cylinder(h = segment_height, r = radius);
+    }
 }
 
-//Inner lobes. The difference shading is eh, 
-//but it is needed to indicate the inner lobes
+module hair() {
+    offset_z = -8;
+    locks_offsets = [
+        [-12, 0, offset_z],
+        [-5, 8, offset_z],
+        [-5, -8, offset_z],
+        [5, 8, offset_z],
+        [5, -8, offset_z],
+        [0, 0, offset_z]
+    ];
 
-color([.90,.596,.41])
-difference(){
-cylinder(h=6, r1=4, r2=0);
-
-translate([0,-4,0])
-cube([8,8,8]);}
+    for (i = array_range(locks_offsets)) {
+        lock_of_hair(locks_offsets[i]);
+    }
 }
-translate([5,10,16])
-rotate([-25,0,0])
-ear();
 
-translate([5,-10,16])
-rotate([25,0,0])
-ear();
+module nose_base() {
+    internal_part_radius = 2;
+    external_part_radius = 2.4;
+    external_part_offset = [2, 0, 0];
+
+    color(BLACK)
+        hull(){
+            sphere(r = internal_part_radius);
+
+            translate(external_part_offset)
+                sphere(r = external_part_radius);
+        }
+}
+
+module nose_substractions(position) {
+    offset_x = 1;
+    offset_y = 0;
+    offset_z = 3;
+    radius = 2;
+
+    for (i = array_range(DIRECTIONS)) {
+        color(BLACK)
+            translate([offset_x, offset_y, offset_z * DIRECTIONS[i]])
+                sphere(r = radius);
+    }
+}
+
+module nose() {
+    offset = [20, 0, 0];
+
+    translate(offset)
+        difference() {
+            nose_base();
+            nose_substractions();
+        }
+}
+
+module smirk_stroke(rotation, ratio, offsets) {
+    radius = 1;
+
+    rotate(rotation)
+        difference() {
+            translate(offsets[0])
+                scale(ratio)
+                    sphere(r = radius);
+
+            translate(offsets[1])
+                scale(ratio)
+                    sphere(r = radius);
+        }
+}
+
+function stroke(rotation, scale, offsets) = [rotation, ratio, offsets];
+
+module smirk() {
+    offset = [20, 3, -7];
+
+    strokes = [
+        stroke(
+            rotation = RIGHT_15_DEGREES,
+            ratio = [1, 4, 1],
+            offsets = [
+                [ 0, 0, 0],
+                [ 0, 0, 1]
+            ]
+        ),
+        stroke(
+            rotation = LEFT_15_DEGREES,
+            ratio = [1, 1, 4],
+            offsets = [
+                [0, 3, 2],
+                [ 0, 3, 0]
+            ]
+        ),
+        stroke(
+            rotation = RIGHT_15_DEGREES,
+            ratio = [1, 1, 4],
+            offsets = [
+                [0, 3.5, 0],
+                [0, 3.5, 2]
+            ]
+        )
+    ];
+
+    color(BLACK)
+        translate(offset) {
+            for (i = array_range(strokes)) {
+                smirk_stroke(
+                    rotation = strokes[i][0],
+                    ratio = strokes[i][1],
+                    offsets = strokes[i][2]
+                );
+            }
+        }
+}
+
+function invert_y(xyz) = [xyz[0], xyz[1] * -1, xyz[2]];
+
+module snout() {
+    offset = [7, 0, 0];
+    base_radius = 15;
+    base_substraction_radius = 13.5;
+    front_substraction_offset = [-15, -15, -15];
+    front_substraction_dimensions = [15, 30, 30];
+    side_substraction_offset = [8, -7.5, 6];
+    side_substraction_radius = 9;
+    nose_contour_offset = [15, 0, 2];
+    nose_contour_radius = 4;
+
+    color(SKIN)
+        translate(offset)
+            difference() {
+
+                sphere(base_radius);
+                sphere(base_substraction_radius);
+
+                rotate(Y_90_DEGREES)
+                    translate(front_substraction_offset)
+                        cube(front_substraction_dimensions);
+
+                translate(side_substraction_offset)
+                    sphere(side_substraction_radius);
+
+                translate(invert_y(side_substraction_offset))
+                    sphere(side_substraction_radius);
+
+               translate(nose_contour_offset)
+                    sphere(nose_contour_radius);
+            }
+}
+
+module outer_ear(pavilion) {
+    base_height = 10;
+    base_bottom_radius = 5;
+    base_top_radius = 0;
+
+    substraction_offset = [0, -5, 0];
+    substraction_size = 10;
+
+    color(BLUE)
+        difference() {
+            cylinder(base_height, base_bottom_radius, base_top_radius);
+            cylinder(pavilion[0], pavilion[1], pavilion[2]);
+
+            translate(substraction_offset)
+                cube(substraction_size);
+    }
+}
+
+module inner_ear(pavilion) {
+    substraction_size = 8;
+    substraction_offset = [0, -4, 0];
+
+    color(SKIN)
+        difference() {
+            cylinder(pavilion[0], pavilion[1], pavilion[2]);
+
+            translate(substraction_offset)
+                cube(substraction_size);
+    }
+}
+
+module ear(offset_y, rotation_x) {
+    offset = [5, offset_y, 16];
+    rotation = [rotation_x, 0, 0];
+    pavilion_height = 6;
+    pavilion_bottom_radius = 4;
+    pavilion_top_radius = 0;
+    pavilion = [
+        pavilion_height,
+        pavilion_bottom_radius,
+        pavilion_top_radius
+    ];
+
+    translate(offset)
+        rotate(rotation) {
+            outer_ear(pavilion);
+            inner_ear(pavilion);
+        }
+}
+
+module ears() {
+    offset_y = -10;
+    rotation_x = 25;
+
+    for (i = array_range(DIRECTIONS)) {
+        ear(offset_y * DIRECTIONS[i], rotation_x * DIRECTIONS[i]);
+    }
+}
+
+module sonic() {
+    pedestal();
+    head();
+    eyes();
+    hair();
+    nose();
+    smirk();
+    snout();
+    ears();
+}
+
+sonic();
